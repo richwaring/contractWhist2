@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Contract Whist (MVC)</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header class=" = " header">
+        <div class="myNavbar">
+            <ul class="navbar-nav flex-grow-1">
+                <li class="nav-item">
+                    <a class="nav-link text-dark navlink1" asp-area="" asp-controller="Home" asp-action="Index">Home </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark navlink2" asp-area="" asp-controller="About" asp-action="Index">About </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark navlink3" asp-area="" asp-controller="Home" asp-action="CatPictures">Cat Pictures </a>
+                </li>
+            </ul>
+        </div>
+    </header>
+    <br />
+    <br />
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2019 - Rich's MVC Contract Whist - <a asp-area="" asp-controller="Home" asp-action="About">About</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

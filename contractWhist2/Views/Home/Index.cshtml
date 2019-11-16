@@ -1,0 +1,199 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<style>
+    body {
+        background-color: green;
+    }
+</style>
+
+<div class="text-center">
+
+    <h1 class="display-4">Contract Whist</h1>
+
+    <div id="targetModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+
+            <label for="uname"><b>How many tricks will you win this hand?</b></label>
+            <input id ="userTarget" type="text" placeholder="Enter valid number of tricks" required onkeyup="enterEqualsSubmit()">
+
+            <input type="submit" onclick="userTargetClick()"/><p id="modalValidationMsg" style="color:red"></p>
+        </div>
+
+    </div>
+
+    <p id="gameRound">Game @ViewBag.game, round @ViewBag.round</p>
+    <table border="0" style="width: 1000px;">
+        <col width="100px" />
+        <col width="100px" />
+        <col width="100px" />
+        <col width="100px" />
+        <col width="100px" />
+        <col class="col6" width="900px" />
+        <tbody>
+            <tr style="height: 75px;">
+                <td style="width: 100px; height: 75px;"></td>
+                <td style="width: 100px; height: 75px;"></td>
+                <td id="p2TargetAndScore" style="width: 100px; height: 75px;">Target: <b id="p2Target">@if (ViewBag.p2Target != -1) {<text>@ViewBag.p2Target</text> }
+    else { <text>_</text>}
+</b> <br /> Tricks Won: @ViewBag.p2TricksWon</td>
+                <td style="width: 100px; height: 75px;">@ViewBag.p2Cardlist</td>
+                <td id="scoreboard" colspan="2" rowspan="2" style="width: 100px; height: 75px;">
+
+                    <table id="scoreboard" border="1">
+                        <thead>
+                        <th rowspan="2">Round</th>
+                        <th colspan="2">Player 1</th>
+                        <th colspan="2">Player 2</th>
+                        <th colspan="2">Player 3</th>
+                        <th colspan="2">Player 4</th>
+                        </thead>
+                        <thead>
+                        <th></th>
+                        <th>Target</th>
+                        <th>Points</th>
+                        <th>Target</th>
+                        <th>Points</th>
+                        <th>Target</th>
+                        <th>Points</th>
+                        <th>Target</th>
+                        <th>Points</th>
+
+                        </thead>
+
+                        @if (ViewBag.scoreboardValues != null)
+                        {
+                            @foreach (var item in ViewBag.scoreboardValues)
+                            {
+                                <tr>
+                                    @if (item[0] > -1) {<td>@item[0]</td>} else {<td></td>}
+
+                                    @if (item[1] > -1) {<td id="Rnd@(item[0])p1Tgt">@item[1]</td>}
+                                        else {<td id="Rnd@(item[0])p1Tgt"></td>}
+
+                                    @if (item[3] > -1) { <td id="Rnd@(item[0])p1Pts">@item[3]</td>}
+                                        else {<td id="Rnd@(item[0])p1Pts"></td>}
+
+                                    @if (item[4] > -1) { <td id="Rnd@(item[0])p2Tgt">@item[4]</td> }
+                                        else {<td id="Rnd@(item[0])p2Tgt"></td>}
+
+                                    @if (item[6] > -1) { <td id="Rnd@(item[0])p2Pts">@item[6]</td> }
+                                        else { <td id="Rnd@(item[0])p2Pts"></td> }
+
+                                    @if (item[7] > -1) { <td id="Rnd@(item[0])p3Tgt">@item[7]</td> }
+                                        else { <td id="Rnd@(item[0])p3Tgt"></td> }
+
+                                    @if (item[9] > -1) { <td id="Rnd@(item[0])p3Pts">@item[9]</td> }
+                                        else { <td id="Rnd@(item[0])p3Pts"></td> }
+
+                                    @if (item[10] > -1) { <td id="Rnd@(item[0])p4Tgt">@item[10]</td> }
+                                        else { <td id="Rnd@(item[0])p4Tgt"></td> }
+
+                                    @if (item[12] > -1) { <td id="Rnd@(item[0])p4Pts">@item[12]</td> }
+                                        else { <td id="Rnd@(item[0])p4Pts"></td> }
+                                </tr>
+                            }
+                        }
+
+                    </table>
+
+                </td>
+            </tr>
+            <tr style="height: 150px;">
+                <td style="width: 100px; height: 150px;">@ViewBag.p1Cardlist</td>
+                <td style="width: 100px; height: 150px;">&nbsp;</td>
+                <td style="width: 100px; height: 150px;">
+                    @if (@ViewBag.p2PlaysCard != null)
+                    {<img id="p2PlaysCard" class="img1" src="pics/cards/@(ViewBag.p2PlaysCard).jpg" alt="NONE" width="66" height="100" />}
+                </td>
+                <td style="width: 100px; height: 150px;"></td>
+                <td style="width: 100px; height: 150px;">&nbsp;</td>
+                <td style="width: 400px; height: 150px;"></td>
+            </tr>
+            <tr style="height: 150px;">
+                <td id="p1TargetAndScore" style="width: 100px; height: 150px;">Target: <b id="p1Target">@if (ViewBag.p1Target != -1) {<text>@ViewBag.p1Target</text> }
+    else { <text>_</text>}
+</b> <br />Tricks Won: @ViewBag.p1TricksWon</td>
+                <td style="width: 100px; height: 150px;">
+                    @if (@ViewBag.p1PlaysCard != null)
+                    {<img id="p1PlaysCard" class="img1" src="pics/cards/@(ViewBag.p1PlaysCard).jpg" alt="NONE" width="66" height="100" />}
+                </td>
+                <td style="width: 100px; height: 150px;"><img id="goArrow" src="pics/cards/@(ViewBag.whoseGoIsIt)Arrow.png" alt="Sample Photo" width="100" height="100" data-rotate="90" /></td>
+                <td style="width: 100px; height: 150px;">
+                    @if (@ViewBag.p3PlaysCard != null)
+                    {<img id="p3PlaysCard" class="img1" src="pics/cards/@(ViewBag.p3PlaysCard).jpg" alt="NONE" width="66" height="100" />}
+                </td>
+                <td id="p3TargetAndScore" style="width: 100px; height: 150px;">Target: <b id="p3Target">@if (ViewBag.p3Target != -1) {<text>@ViewBag.p3Target</text> }
+    else { <text>_</text>}
+</b> <br /> Tricks Won: @ViewBag.p3TricksWon</td>
+                <td class="col6" style="width: 400px; height: 150px;" valign="top">
+                    @ViewBag.p3Cardlist <br />Trumps:
+                    @if (@ViewBag.trumpcard_img != null)
+                    {<img id="userCard1" class="img1" src="@ViewBag.trumpcard_img" alt="" width="66" height="100" />}
+                </td>
+            </tr>
+            <tr style="height: 150px;">
+                <td style="width: 100px; height: 150px;">&nbsp;</td>
+                <td style="width: 100px; height: 150px;">&nbsp;</td>
+                <td style="width: 100px; height: 150px;">
+                    @if (@ViewBag.p4PlaysCard != null)
+                    {<img id="p4PlaysCard" class="img1" src="pics/cards/@(ViewBag.p4PlaysCard).jpg" alt="Player 4 plays" width="66" height="100" />}
+
+                </td>
+                <td style="width: 100px; height: 150px;">&nbsp;</td>
+                <td style="width: 100px; height: 150px;">Your cards:</td>
+                <td class="col6" style="width: 1100px; height: 150px;">
+                    @if (@ViewBag.p4Card1 != null)
+                    {<img id="@ViewBag.p4Card1" class="img1 userCard" src="pics/cards/@(ViewBag.p4Card1).jpg" alt="pighead" width="66" height="100" ondblclick="dblClickMyCard(this)" />}
+                    @if (@ViewBag.p4Card2 != null)
+                    {<img id="@ViewBag.p4Card2" class="img1 userCard" src="pics/cards/@(ViewBag.p4Card2).jpg" alt="pighead" width="66" height="100" ondblclick="dblClickMyCard(this)" />}
+                    @if (@ViewBag.p4Card3 != null)
+                    {<img id="@ViewBag.p4Card3" class="img1 userCard" src="pics/cards/@(ViewBag.p4Card3).jpg" alt="pighead" width="66" height="100" ondblclick="dblClickMyCard(this)" />}
+                    @if (@ViewBag.p4Card4 != null)
+                    {<img id="@ViewBag.p4Card4" class="img1 userCard" src="pics/cards/@(ViewBag.p4Card4).jpg" alt="pighead" width="66" height="100" ondblclick="dblClickMyCard(this)" />}
+                    @if (@ViewBag.p4Card5 != null)
+                    {<img id="@ViewBag.p4Card5" class="img1 userCard" src="pics/cards/@(ViewBag.p4Card5).jpg" alt="pighead" width="66" height="100" ondblclick="dblClickMyCard(this)" />}
+                    @if (@ViewBag.p4Card6 != null)
+                    {<img id="@ViewBag.p4Card6" class="img1 userCard" src="pics/cards/@(ViewBag.p4Card6).jpg" alt="pighead" width="66" height="100" ondblclick="dblClickMyCard(this)" />}
+                    @if (@ViewBag.p4Card7 != null)
+                    {<img id="@ViewBag.p4Card7" class="img1 userCard" src="pics/cards/@(ViewBag.p4Card7).jpg" alt="pighead" width="66" height="100" ondblclick="dblClickMyCard(this)" />}
+                </td>
+            </tr>
+            <tr style="height: 75px;">
+                <td style="width: 100px; height: 75px;">&nbsp;</td>
+                <td style="width: 100px; height: 75px;">&nbsp;</td>
+                <td id="p4TargetAndScore" style="width: 100px; height: 75px;">Target: <b id="p4Target">@if (ViewBag.p4Target != -1) {<text>@ViewBag.p4Target</text> }
+    else { <text>_</text>}
+</b> <br /> Tricks Won: @ViewBag.p4TricksWon</td>
+                <td style="width: 100px; height: 75px;">&nbsp;</td>
+                <td style="width: 100px; height: 75px;">
+                    &nbsp;
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<script>
+    //open modal if it's the user's go t set target...
+    var gameRound = document.getElementById("gameRound").innerText.split(", ")
+    var roundId = Number(gameRound[1].substr(6));
+
+    var p3Target = document.getElementById("p3Target").innerHTML;
+    var p4Target = document.getElementById("p4Target").innerHTML;
+
+    console.log("Index.cshtml body script ran - gameRound = " + gameRound + ", roundId = " + roundId +
+        ", p3Target = " + p3Target + ", p4Target = " + p4Target );
+
+    if (
+        ((roundId + 2) % 4) + 1 == 4
+        || (p3Target != "_" && p4Target == "_")
+        
+    ) {
+        document.getElementById('targetModal').style.display = 'block';
+    }
+
+    </script>
