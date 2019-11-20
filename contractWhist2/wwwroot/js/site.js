@@ -211,9 +211,7 @@ function handlePlayedCardResponse()
 function endGame(jsonResponse)
 {
     p1score = document.getElementById("Rnd" + (thisRoundId) + "p1Pts").innerHTML
-
-    //console.log("firing Endgame");
-
+    
     var scoreArray = jsonResponse.finalScoreBoardValues;
 
     updateUserScores(1, jsonResponse.playerTricksWon[0], jsonResponse.playerTargetList[0], scoreArray[0]);
@@ -221,8 +219,6 @@ function endGame(jsonResponse)
     updateUserScores(3, jsonResponse.playerTricksWon[2], jsonResponse.playerTargetList[2], scoreArray[2]);
     updateUserScores(4, jsonResponse.playerTricksWon[3], jsonResponse.playerTargetList[3], scoreArray[3]);
 
-//    console.log("scoreArray = " + scoreArray);
-    
     var highestScore = -8;
     var winningUser = "";
 
@@ -237,9 +233,8 @@ function endGame(jsonResponse)
 
     var winMessage = winningUser == "Player 4" ? "Congratulations, you won!" : winningUser + " wins.";
 
-    //console.log("winningUser = " + winningUser + ", winMessage = " + winMessage);
-
     document.getElementById("winMessage").innerHTML = winMessage;
+    document.getElementById("playAgainButton").style = "display:block";
 }
 
 function enableUserCardDblClick(validCardList) {

@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Contract Whist";
 }
 
 <style>
@@ -10,7 +10,7 @@
 
 <div class="text-center">
 
-    <h1 class="display-4">Contract Whist</h1>
+    <h1 sstyle="color:darkmagenta" class="display-4">Contract Whist</h1>
 
     <div id="targetModal" class="modal">
 
@@ -144,7 +144,7 @@
                 @ViewBag.p3Cardlist <br />Trumps:
                 @if (@ViewBag.trumpcard_img != null)
                 {<img id="userCard1" class="img1" src="@ViewBag.trumpcard_img" alt="" width="66" height="100" />}
-            <h3 style="color:red" id="winMessage"></h3>
+            <h3 style="color:darkmagenta" id="winMessage"></h3><button id ="playAgainButton" style="display:none" onclick="window.location.href = '/'">Play again</button>
             </h3>
             </tr>
             <tr style="height: 150px;">
