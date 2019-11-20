@@ -70,7 +70,7 @@ create table gameRounds (roundid bigint identity primary key, gameId bigint, rou
 if exists (select 'tabs',* from sysobjects where type = 'U' and name like 'playerRounds')
 drop table playerRounds
 go
-create table playerRounds (prID bigint identity primary key clustered, gameId bigint, roundId bigint, playerId int, target int, tricksWon int, roundPoints bigint, gamePoints bigint)
+create table playerRounds (prID bigint identity primary key clustered, gameId bigint, roundId bigint, playerId int, target int, tricksWon int, roundPoints bigint, gamePoints bigint, roundNumber int)
 go
 create index roundId_GameId on playerRounds (roundId, GameId)
 go
@@ -93,7 +93,7 @@ go
 if exists (select 'procs',* from sysobjects where type = 'P' and name like 'Scoreboard_newGame' )
 drop proc Scoreboard_newGame
 go
-create proc Scoreboard_newGame @rounds int, @gameID bigint output
+create proc Scoreboard_newGame @rounds int, @gameID bigint output, @fDebug char (1) = 'Y'
 as
 declare @roundCounter int
 
@@ -112,11 +112,11 @@ while @roundCounter <= @rounds
 
 		end
 
-INSERT INTO playerRounds (roundid, playerId, gameId, tricksWon, target)
-select roundid, 1, gameId, 0, -1 from gameRounds where gameId = @gameID union
-select roundid, 2, gameId, 0, -1 from gameRounds where gameId = @gameID union
-select roundid, 3, gameId, 0, -1 from gameRounds where gameId = @gameID union
-select roundid, 4, gameId, 0, -1 from gameRounds where gameId = @gameID 
+INSERT INTO playerRounds (roundid, playerId, gameId, tricksWon, target, roundNumber)
+select roundid, 1, gameId, 0, -1, roundNumber from gameRounds where gameId = @gameID union
+select roundid, 2, gameId, 0, -1, roundNumber from gameRounds where gameId = @gameID union
+select roundid, 3, gameId, 0, -1, roundNumber from gameRounds where gameId = @gameID union
+select roundid, 4, gameId, 0, -1, roundNumber from gameRounds where gameId = @gameID 
 
 
 return @gameID
@@ -245,6 +245,9 @@ drop table #ourDeck
 SELECT * FROM #ourDeck
 */
 
+if not exists (SELECT 1 FROM gameRounds where gameid = @gameid and roundnumber = @roundNumber)
+return -1
+
 declare @deckCount int, @myCard char(2),@myCardvalueInSuit int, @randomNumber int, @playerCounter int, @totalCardsToDeal int, @roundID bigint
 
 SELECT @roundID = roundid, @numCardsToDeal = numCards FROM gameRounds where gameid = @gameid and roundnumber = @roundNumber
@@ -346,13 +349,14 @@ SELECT x.playerid, cards = STUFF((
 	and roundid = @roundID
 	and cardPlayed = 'y'
 	order by right(cardshortname,1), valueInSuit desc
-    FOR XML PATH(''), TYPE).value(N'.[1]', N'nvarchar(max)'), 1, 2, N'' )
+    FOR XML PATH(''), TYPE).value(N'.[1]', N'nvarchar(max)'), 1, 2, N'' ), prsub.roundPoints
 FROM playerRoundCards x
 join playerRounds pr on x.prID = pr.prID
+left join (SELECT pr2.gameid, playerId, roundPoints FROM playerRounds pr2 where roundnumber in (select max(roundnumber) from playerRounds pr3 where roundPoints is not null and pr3.gameid = pr2.gameId and pr3.playerId = pr2.playerid )) prsub on prsub.gameId = pr.gameid and prsub.playerId = pr.playerId
 where x.roundid = @roundID
-GROUP BY x.playerid, target, tricksWon
+GROUP BY x.playerid, target, tricksWon, prsub.roundPoints
 union
-select '9' 'playerid',trumpCard 'cards', 0, 0, '' from gameRounds where roundid = @roundID
+select '9' 'playerid',trumpCard 'cards', 0, 0, '', 0 from gameRounds where roundid = @roundID
 ORDER BY playerid
 
 go
@@ -427,34 +431,26 @@ as
 
 if @fDebug = 'Y'
 SELECT 'before round score calc',* 
-from games g
-join gameRounds gr on g.id = gr.gameid
-join playerRounds pr on gr.roundid = pr.roundId 
-where g.id = @gameID
-order by gr.roundNumber, pr.playerId
+from playerRounds pr 
+where pr.gameid = @gameID
+order by pr.roundNumber, pr.playerId
 
 update pr set roundPoints = 0
-from games g
-join gameRounds gr on g.id = gr.gameid
-join playerRounds pr on gr.roundid = pr.roundId 
-where g.id = @gameID
-and roundNumber = @roundnumber
+from playerRounds pr 
+where pr.gameid = @gameID
+and pr.roundNumber = @roundnumber
 and roundPoints < 0
 
 update pr set pr.roundPoints = case when trickswon = target then trickswon + 10 else trickswon end
-from games g
-join gameRounds gr on g.id = gr.gameid
-join playerRounds pr on gr.roundid = pr.roundId 
-where g.id = @gameID
-and roundNumber = @roundnumber
+from playerRounds pr 
+where pr.gameid = @gameID
+and pr.roundNumber = @roundnumber
 
 if @fDebug = 'Y'
 SELECT 'after round score calc',* 
-from games g
-join gameRounds gr on g.id = gr.gameid
-join playerRounds pr on gr.roundid = pr.roundId 
-where g.id = @gameID
-order by gr.roundNumber, pr.playerId
+from playerRounds pr 
+where pr.gameid = @gameID
+order by pr.roundNumber, pr.playerId
 
 declare @roundCounter int, @playerCounter int, @totalRoundPoints int
 select @roundCounter = 1
@@ -468,31 +464,26 @@ begin
 				select @totalRoundPoints = 0
 
 				select @totalRoundPoints = sum(isnull(roundPoints,0))
-				from games g
-				join gameRounds gr on g.id = gr.gameid
-				join playerRounds pr on gr.roundid = pr.roundId 
-				where g.id = @gameID
+				from playerRounds pr 
+				where pr.gameid = @gameID
 				and playerId = @playerCounter
-				and roundNumber <= @roundCounter
+				and pr.roundNumber <= @roundCounter
 
 				if @fDebug = 'Y'
 				begin
 				select 'loop params', @gameID '@gameID', @playerCounter '@playerCounter', @roundCounter '@roundCounter', @totalRoundPoints '@totalRoundPoints'
-				select 'games etc',* from games g
-				join gameRounds gr on g.id = gr.gameid
-				join playerRounds pr on gr.roundid = pr.roundId 
-				where g.id = @gameID
+				select 'playerRounds',* 
+				from playerRounds pr 
+				where pr.gameid = @gameID
 				and playerId = @playerCounter
-				and roundNumber = @roundCounter
+				and pr.roundNumber <= @roundCounter
 				end
 
 				update pr set gamePoints = @totalRoundPoints
-				from games g
-				join gameRounds gr on g.id = gr.gameid
-				join playerRounds pr on gr.roundid = pr.roundId 
-				where g.id = @gameID
+				from playerRounds pr 
+				where pr.gameid = @gameID
 				and playerId = @playerCounter
-				and roundNumber = @roundCounter
+				and pr.roundNumber = @roundCounter
 
 				select @playerCounter += 1
 		end

@@ -115,26 +115,37 @@
                 <td style="width: 400px; height: 150px;"></td>
             </tr>
             <tr style="height: 150px;">
-                <td id="p1TargetAndScore" style="width: 100px; height: 150px;">Target: <b id="p1Target">@if (ViewBag.p1Target != -1) {<text>@ViewBag.p1Target</text> }
-    else { <text>_</text>}
-</b> <br />Tricks Won: @ViewBag.p1TricksWon</td>
-                <td style="width: 100px; height: 150px;">
-                    @if (@ViewBag.p1PlaysCard != null)
-                    {<img id="p1PlaysCard" class="img1" src="pics/cards/@(ViewBag.p1PlaysCard).jpg" alt="NONE" width="66" height="100" />}
-                </td>
-                <td style="width: 100px; height: 150px;"><img id="goArrow" src="pics/cards/@(ViewBag.whoseGoIsIt)Arrow.png" alt="Sample Photo" width="100" height="100" data-rotate="90" /></td>
-                <td style="width: 100px; height: 150px;">
-                    @if (@ViewBag.p3PlaysCard != null)
-                    {<img id="p3PlaysCard" class="img1" src="pics/cards/@(ViewBag.p3PlaysCard).jpg" alt="NONE" width="66" height="100" />}
-                </td>
-                <td id="p3TargetAndScore" style="width: 100px; height: 150px;">Target: <b id="p3Target">@if (ViewBag.p3Target != -1) {<text>@ViewBag.p3Target</text> }
-    else { <text>_</text>}
-</b> <br /> Tricks Won: @ViewBag.p3TricksWon</td>
-                <td class="col6" style="width: 400px; height: 150px;" valign="top">
-                    @ViewBag.p3Cardlist <br />Trumps:
-                    @if (@ViewBag.trumpcard_img != null)
-                    {<img id="userCard1" class="img1" src="@ViewBag.trumpcard_img" alt="" width="66" height="100" />}
-                </td>
+                <td id="p1TargetAndScore" style="width: 100px; height: 150px;">
+                    Target: <b id="p1Target">
+                        @if (ViewBag.p1Target != -1)
+                        {<text>@ViewBag.p1Target</text> }
+                    else
+                    { <text>_</text>}
+                </b> <br />Tricks Won: @ViewBag.p1TricksWon
+            </td>
+            <td style="width: 100px; height: 150px;">
+                @if (@ViewBag.p1PlaysCard != null)
+                {<img id="p1PlaysCard" class="img1" src="pics/cards/@(ViewBag.p1PlaysCard).jpg" alt="NONE" width="66" height="100" />}
+            </td>
+            <td style="width: 100px; height: 150px;"><img id="goArrow" src="pics/cards/@(ViewBag.whoseGoIsIt)Arrow.png" alt="Sample Photo" width="100" height="100" data-rotate="90" /></td>
+            <td style="width: 100px; height: 150px;">
+                @if (@ViewBag.p3PlaysCard != null)
+                {<img id="p3PlaysCard" class="img1" src="pics/cards/@(ViewBag.p3PlaysCard).jpg" alt="NONE" width="66" height="100" />}
+            </td>
+            <td id="p3TargetAndScore" style="width: 100px; height: 150px;">
+                Target: <b id="p3Target">
+                    @if (ViewBag.p3Target != -1)
+                    {<text>@ViewBag.p3Target</text> }
+                else
+                { <text>_</text>}
+            </b> <br /> Tricks Won: @ViewBag.p3TricksWon
+            </td>
+            <td class="col6" style="width: 400px; height: 150px;" valign="top">
+                @ViewBag.p3Cardlist <br />Trumps:
+                @if (@ViewBag.trumpcard_img != null)
+                {<img id="userCard1" class="img1" src="@ViewBag.trumpcard_img" alt="" width="66" height="100" />}
+            <h3 style="color:red" id="winMessage"></h3>
+            </h3>
             </tr>
             <tr style="height: 150px;">
                 <td style="width: 100px; height: 150px;">&nbsp;</td>
@@ -185,8 +196,7 @@
     var p3Target = document.getElementById("p3Target").innerHTML;
     var p4Target = document.getElementById("p4Target").innerHTML;
 
-    console.log("Index.cshtml body script ran - gameRound = " + gameRound + ", roundId = " + roundId +
-        ", p3Target = " + p3Target + ", p4Target = " + p4Target );
+//    console.log("Index.cshtml body script ran - gameRound = " + gameRound + ", roundId = " + roundId + ", p3Target = " + p3Target + ", p4Target = " + p4Target );
 
     if (
         ((roundId + 2) % 4) + 1 == 4

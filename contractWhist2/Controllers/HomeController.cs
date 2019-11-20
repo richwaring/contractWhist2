@@ -83,24 +83,31 @@ namespace contractWhist2.Controllers
 
             //3. get the robots to say how may tricks they think they'll win this time....
             getUserCardsAndMotivation();
-            robotsSetTargets(userTargetArray[3], userTargetArray[4], userTargetArray[5]);
+            allRobotsSetTargets();
 
             //4. if robots need to lead, let them lead....
             List<string> newTrickLeaders = new List<string>();
             if (whoseGoIsIt != 4)
-            newTrickLeaders = leadCards().ToList();
-            getUsersValidFollows();
+            {
+                newTrickLeaders = leadCards().ToList();
+                getUsersValidFollows();
+            }
 
             return new JsonResult(new { runningTotal = totaloftargets, p1AimsFor = p1.target, p2AimsFor = p2.target, p3AimsFor = p3.target, nextTrickCards = newTrickLeaders, validUserFollows = usersInSuitOptions });
         }
 
+        public void allRobotsSetTargets()
+        {
+                    setRobotTarget("NONE", p1);
+                    setRobotTarget("NONE", p2);
+                    setRobotTarget("NONE", p3);
+        }
 
         public void robotsSetTargets(string p1Target, string p2Target, string p3Target)
         {
             switch (whoseGoIsIt)
             {
                 case 1:
-                case 4:
                     setRobotTarget(p1Target, p1);
                     setRobotTarget(p2Target, p2);
                     setRobotTarget(p3Target, p3);
@@ -112,7 +119,6 @@ namespace contractWhist2.Controllers
                 case 3:
                     setRobotTarget(p3Target, p3);
                     break;
-
             }
         }
 
@@ -129,16 +135,14 @@ namespace contractWhist2.Controllers
                                                                 || x.valueInSuit > 11 )));
                 thisPlayer.target = winners.Count > 0 ? winners.Count - 1 : 0;
                 writeUserTargetToDatabase(thisPlayer.playerId.ToString(), thisPlayer.target.ToString());
-
             }
 
         }
 
-
         public IActionResult playCard(string id)
 
         {
-            //split the inbound id string into parameters
+            //0. split the inbound id string into parameters
             var playedCardArray = id.Split("-").ToArray();
             currentGameId = Int32.Parse(playedCardArray[0]);
             currentRoundNumber = Int32.Parse(playedCardArray[1]);
@@ -153,12 +157,13 @@ namespace contractWhist2.Controllers
             getUserCardsAndMotivation();
 
             string lastTrick = "N";
+            string lastRound = "N";
 
             List<string> newTrickLeaders = new List<string>();
             if (p1.cards != null) {
                 newTrickLeaders = leadCards().ToList();
 
-                //4. get the user's valid following cards if a robot has led...
+                //3. get the user's valid following cards if a robot has led...
                 getUsersValidFollows();
             }
             else {
@@ -167,14 +172,39 @@ namespace contractWhist2.Controllers
                 newTrickLeaders.Add("NONE");
                 lastTrick = "Y";
                 calculateRoundScores();
+                lastRound = currentRoundNumber == 7 ? "Y" : "N";
+
             }
 
-            //3. gets lists of scores and targets to report back to the front end...
-            int[] playerScores = { p1.tricksWon, p2.tricksWon , p3.tricksWon , p4.tricksWon };
+            List<long> finalScores = new List<long>();
+
+            if (lastRound == "Y" )          {
+                getGameScoreBoardInfo();
+                finalScores.Add(scoreboardValues[6][3]);
+                finalScores.Add(scoreboardValues[6][6]);
+                finalScores.Add(scoreboardValues[6][9]);
+                finalScores.Add(scoreboardValues[6][12]);
+ }
+
+            //4. gets lists of scores and targets to report back to the front end...
+            int[] playerTricksWon = { p1.tricksWon, p2.tricksWon , p3.tricksWon , p4.tricksWon };
             int[] playerTargets = { p1.target, p2.target, p3.target, p4.target };
+            int[] playerScores = { p1.scoreSoFar, p2.scoreSoFar, p3.scoreSoFar, p4.scoreSoFar };
+            
 
             //4. return results...
-            return new JsonResult(new { thisTrickCards = oldTrickFollowers, nextTrickCards = newTrickLeaders, winner = "p" + whoseGoIsIt.ToString(), playerTricksWon = playerScores, playerTargetList = playerTargets, validUserFollows = usersInSuitOptions, initialiseNewRound = lastTrick });
+            return new JsonResult(new { 
+                                        thisTrickCards = oldTrickFollowers, 
+                                        nextTrickCards = newTrickLeaders, 
+                                        winner = "p" + whoseGoIsIt.ToString(), 
+                                        playerTricksWon = playerTricksWon, 
+                                        playerTargetList = playerTargets, 
+                                        validUserFollows = usersInSuitOptions, 
+                                        initialiseNewRound = lastTrick, 
+                                        endGame = lastRound, 
+                                        latestPlayerScores = playerScores, 
+                                        finalScoreBoardValues = finalScores
+            });
         }
 
         public void getUsersValidFollows()
@@ -272,45 +302,24 @@ namespace contractWhist2.Controllers
             return cardToPlay;
         }
 
-
-
         public card chooseAndPlayCard (player thisPlayer)
         {
             card cardToPlay;
 
             bool youCanFollowSuit = filterCardsBySuit(thisPlayer.cards, leadCard.suit).Count() > 0;
 
-            //1. if you can follow suit, follow suit....
+            //1. if you can follow suit, follow suit
             if (youCanFollowSuit)
             {
                 cardToPlay = followSuit(thisPlayer);
             }
             else
             {
-                //2. if you can't follow suit, do you have a trump that would beat any trumps already played?....
-                card myGoodTrump = new card("NONE");
-                List<card> myTrumps = filterCardsBySuit(thisPlayer.cards, trumpcard);
-                List<card> cardsThatBeatTrumper = new List<card>();
+                //2. do you have a winning trump?
+                card myGoodTrump = findWinningTrump(thisPlayer);
 
-                //if you have trumps and someone else has trumped, can you beat it?...
-                if (myTrumps.Count > 0 && winningTrump != null)
-                {
-                    cardsThatBeatTrumper.AddRange(myTrumps.Where(x => x.valueInSuit > winningTrump.valueInSuit));
-
-                    myGoodTrump = lowestCardInSuit(cardsThatBeatTrumper, trumpcard);
-                    myGoodTrump = myGoodTrump == null ? new card("NONE") : myGoodTrump;
-                }
-
-                //if you have trumps and no-one's played a trump, what's your lowest trump?...
-                if (myTrumps.Count > 0 && winningTrump == null)
-                {
-                    myGoodTrump = lowestCardInSuit(thisPlayer.cards, trumpcard);
-                }
-
-
-                //2b. if you want to win, and you have trumps that beat the "isnull?" winning trump...
+                //2b. if you want to win, and you have a winning trump, play it
                 if (thisPlayer.wantsToWinTricks == true && myGoodTrump.name != "NONE")
-                //play the lowest trump that beats the trump card)
                 {
                     cardToPlay = myGoodTrump;
                     winningTrump = myGoodTrump;
@@ -326,6 +335,30 @@ namespace contractWhist2.Controllers
             thisPlayer.cards.Remove(cardToPlay);
             tellDbCardPlayed(currentGameId, currentRoundNumber, cardToPlay.name);
             return cardToPlay;
+        }
+
+        public card findWinningTrump(player thisPlayer)
+        {
+            card myGoodTrump = new card("NONE");
+            List<card> myTrumps = filterCardsBySuit(thisPlayer.cards, trumpcard);
+            List<card> cardsThatBeatTrumper = new List<card>();
+
+            //if you have trumps and someone else has trumped, can you beat it?...
+            if (myTrumps.Count > 0 && winningTrump != null)
+            {
+                cardsThatBeatTrumper.AddRange(myTrumps.Where(x => x.valueInSuit > winningTrump.valueInSuit));
+
+                myGoodTrump = lowestCardInSuit(cardsThatBeatTrumper, trumpcard);
+                myGoodTrump = myGoodTrump == null ? new card("NONE") : myGoodTrump;
+            }
+
+            //if you have trumps and no-one's played a trump, what's your lowest trump?...
+            if (myTrumps.Count > 0 && winningTrump == null)
+            {
+                myGoodTrump = lowestCardInSuit(thisPlayer.cards, trumpcard);
+            }
+
+            return myGoodTrump;
         }
 
         public int figureOutWhoLead(string p1Input, string p2Input, string p3Input)
@@ -348,10 +381,10 @@ namespace contractWhist2.Controllers
             string p2plays = playedCardArray[4];
             string p3plays = playedCardArray[5];
 
-            //Figure out who lead...
+            //1. Who lead?
             int leadUser = figureOutWhoLead(p1plays, p2plays, p3plays);
 
-            //Figure out what the lead card was....
+            //2. What was the lead card?
             switch (leadUser)
             {
                 case 4: leadCard.setCardIdentity(p4plays); break;
@@ -360,20 +393,19 @@ namespace contractWhist2.Controllers
                 case 1: leadCard.setCardIdentity(p1plays); break;
             }
 
-            // has anyone trumped? what the current winning card?....
+            //3. What cards were played?
             List<card> cardsSoFar = new List<card> { new card(p1plays), new card(p2plays), new card(p3plays), new card(p4plays) };
-
             List<card> cardsFollowingSuitSoFar = filterCardsBySuit(cardsSoFar, leadCard.suit);
 
             List<card> trumpsPlayedSoFar = filterCardsBySuit(cardsSoFar, trumpcard);
             winningTrump = highestCardInSuit(trumpsPlayedSoFar, trumpcard.Substring(1, 1));
 
-            // Players who still need to play this trick should follow the lead...
+            //4.  Players who need to play a card, do so...
             card p1FollowsWith = chooseAndPlayFollowingCard(leadUser, p1);
             card p2FollowsWith = chooseAndPlayFollowingCard(leadUser, p2);
             card p3FollowsWith = chooseAndPlayFollowingCard(leadUser, p3);
 
-            //figureOutWhoWon
+            //5. Who won the trick?
             whoseGoIsIt = figureOutWhoWon(leadCard, playedCardArray, new List<card> { p1FollowsWith, p2FollowsWith, p3FollowsWith });
             tellDbTrickWon(currentGameId, currentRoundNumber, whoseGoIsIt);
 
@@ -382,12 +414,12 @@ namespace contractWhist2.Controllers
 
         public int figureOutWhoWon(card leadCard, string[] playedCardArray, List<card> followingCardList)
         {
+            //1. bring together the cards values for this trick (from robots who played before and after the user)...
             string p4plays = playedCardArray[2];
             string p1plays = playedCardArray[3];
             string p2plays = playedCardArray[4];
             string p3plays = playedCardArray[5];
 
-            //find the winner of the trick
             Dictionary<card, int> cardsPlayed = new Dictionary<card, int> {
                 { p1plays == "NONE" ? followingCardList[0] : new card(p1plays), 1},
                 { p2plays == "NONE" ? followingCardList[1] : new card(p2plays), 2},
@@ -395,7 +427,7 @@ namespace contractWhist2.Controllers
                 { new card(p4plays), 4}
             };
 
-            //1. if trumps were played, the winner should be the one who played the highest trump
+            //2. if trumps were played, the winner is whoever played the highest trump...
             Dictionary<card, int> trumps = new Dictionary<card, int>();
             foreach (var x in cardsPlayed)
             {
@@ -408,7 +440,7 @@ namespace contractWhist2.Controllers
                 return trumps.Aggregate((l, r) => l.Key.valueInSuit > r.Key.valueInSuit ? l : r).Value;
             }
             else
-            // otherwise, the winner should be the person who followed suit with the highest card....
+            //3. otherwise, the winner is the person who followed suit with the highest card....
             {
                 Dictionary<card, int> cardsInSuit = new Dictionary<card, int>();
                 foreach (var x in cardsPlayed)
@@ -567,7 +599,6 @@ namespace contractWhist2.Controllers
             { stringCardList = row[1].ToString().Split(", ").ToList(); }
 
             return turnStringsIntoCards(stringCardList);
-
         }
 
         public void readRobotMotivation(DataRow row, player thisPlayer)
@@ -575,6 +606,7 @@ namespace contractWhist2.Controllers
             thisPlayer.wantsToWinTricks = Int32.Parse(row[2].ToString()) != Int32.Parse(row[3].ToString());
             thisPlayer.target = Int32.Parse(row[2].ToString());
             thisPlayer.tricksWon = Int32.Parse(row[3].ToString());
+            thisPlayer.scoreSoFar = Int32.Parse(row[3].ToString());
         }
 
         public List<card> turnStringsIntoCards(List<string> stringList)
@@ -683,14 +715,8 @@ namespace contractWhist2.Controllers
                 Row.Add(Int32.Parse(row[11].ToString()));
                 Row.Add(Int32.Parse(row[12].ToString()));
 
-                //                    reader.GetInt32(1), reader.GetInt64(2), reader.GetInt64(3),
-                //                    reader.GetInt32(4), reader.GetInt64(5), reader.GetInt64(6), 
-                //                    reader.GetInt32(7), reader.GetInt64(8), reader.GetInt64(9), 
-                //                    reader.GetInt32(10), reader.GetInt64(11), reader.GetInt64(12)
-
                 scoreboardValues.Add(Row);
             }
-
         }
 
         public class player
@@ -701,6 +727,7 @@ namespace contractWhist2.Controllers
             public int pointsWon = 0;
             public List<card> cards;
             public int playerId;
+            public int scoreSoFar = -1;
 
             public player(int PlayerId)
             {

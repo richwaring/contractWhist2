@@ -13,6 +13,11 @@ sumOfTargets = -1;
 p1Target = "NONE";
 p2Target = "NONE";
 p3Target = "NONE";
+p1score = "notSet";
+p2score = "notSet";
+p3score = "notSet";
+p4score = "notSet";
+
 
 
 function enterEqualsSubmit() {
@@ -61,7 +66,7 @@ function collectRobotTarget(elementId ) {
 function submitUserTarget(userTarget) {
 
     var url = "home/userSubmitsTarget?id=" + thisGameId + "-" + thisRoundId + "-" + userTarget + 
-        "-" +p1Target + "-" + p2Target + "-" + p3Target ;
+        "-" + p1Target + "-" + p2Target + "-" + p3Target ;
 
     console.log("submitUserTarget fired, url = " + url);
 
@@ -143,39 +148,46 @@ function handlePlayedCardResponse()
         console.log("handlePlayedCardResponse fired, ajax.responseText = " + ajax.responseText);
 
         var jsonResponse = JSON.parse(ajax.responseText);
-//        var winner = JSON.parse(ajax.responseText).winner
 
         var delayIncrement = 1
 
+        // show p1's played card (old trick)...
         displayReceivedCard(jsonResponse, 1, delayIncrement);
         delayIncrement = jsonResponse.thisTrickCards[0] != "NONE" ? delayIncrement + 1 : delayIncrement;
-        
+
+        // show p2's played card (old trick)...
         displayReceivedCard(jsonResponse, 2, delayIncrement);
         delayIncrement = jsonResponse.thisTrickCards[1] != "NONE" ? delayIncrement + 1 : delayIncrement;
-        
+
+        // show p3's played card (old trick)...
         displayReceivedCard(jsonResponse, 3, delayIncrement);
         delayIncrement = jsonResponse.thisTrickCards[2] != "NONE" ? delayIncrement + 1 : delayIncrement;
 
+        // Reset cards and set user scores at end of old trick....
         setTimeout(function () {
             resetAllPlayCards();
             setImageSource("goArrow", JSON.parse(ajax.responseText).winner + "Arrow.png");
-            updateUserScores(1, jsonResponse.playerTricksWon[0], jsonResponse.playerTargetList[0]);
-            updateUserScores(2, jsonResponse.playerTricksWon[1], jsonResponse.playerTargetList[1]);
-            updateUserScores(3, jsonResponse.playerTricksWon[2], jsonResponse.playerTargetList[2]);
-            updateUserScores(4, jsonResponse.playerTricksWon[3], jsonResponse.playerTargetList[3]);
+            updateUserScores(1, jsonResponse.playerTricksWon[0], jsonResponse.playerTargetList[0], jsonResponse.latestPlayerScores[0]);
+            updateUserScores(2, jsonResponse.playerTricksWon[1], jsonResponse.playerTargetList[1], jsonResponse.latestPlayerScores[1]);
+            updateUserScores(3, jsonResponse.playerTricksWon[2], jsonResponse.playerTargetList[2], jsonResponse.latestPlayerScores[2]);
+            updateUserScores(4, jsonResponse.playerTricksWon[3], jsonResponse.playerTargetList[3], jsonResponse.latestPlayerScores[3]);
         }, 500 * delayIncrement++);
 
         delayIncrement ++;
 
+        // show p1's played card (new trick)...
         displayNextTrickCard(jsonResponse, 1, delayIncrement);
         delayIncrement = jsonResponse.nextTrickCards[0] != "NONE" ? delayIncrement + 1 : delayIncrement;
 
+        // show p1's played card (new trick)...
         displayNextTrickCard(jsonResponse, 2, delayIncrement);
         delayIncrement = jsonResponse.nextTrickCards[1] != "NONE" ? delayIncrement + 1 : delayIncrement;
 
+        // show p1's played card (new trick)...
         displayNextTrickCard(jsonResponse, 3, delayIncrement);
         delayIncrement = jsonResponse.nextTrickCards[2] != "NONE" ? delayIncrement + 1 : delayIncrement;
 
+        // point the go arrow at the user...
         setTimeout(function () {
             setImageSource("goArrow", "p4Arrow.png");
             enableUserCardDblClick(jsonResponse.validUserFollows);
@@ -183,11 +195,51 @@ function handlePlayedCardResponse()
 
         delayIncrement += 1.5;
 
+        //initialise the new round....
         setTimeout(function () {
-            if (jsonResponse.initialiseNewRound == "Y") { window.location.href = "?id=" + thisGameId + "-" + (thisRoundId + 1); }
-        }, delayIncrement * 500)
+
+            if (jsonResponse.initialiseNewRound == "Y") {
+                if (jsonResponse.endGame == "N") { window.location.href = "?id=" + thisGameId + "-" + (thisRoundId + 1); }
+                else { endGame(jsonResponse); }
+            }
+        }, delayIncrement * 500);
         
     }
+}
+
+
+function endGame(jsonResponse)
+{
+    p1score = document.getElementById("Rnd" + (thisRoundId) + "p1Pts").innerHTML
+
+    //console.log("firing Endgame");
+
+    var scoreArray = jsonResponse.finalScoreBoardValues;
+
+    updateUserScores(1, jsonResponse.playerTricksWon[0], jsonResponse.playerTargetList[0], scoreArray[0]);
+    updateUserScores(2, jsonResponse.playerTricksWon[1], jsonResponse.playerTargetList[1], scoreArray[1]);
+    updateUserScores(3, jsonResponse.playerTricksWon[2], jsonResponse.playerTargetList[2], scoreArray[2]);
+    updateUserScores(4, jsonResponse.playerTricksWon[3], jsonResponse.playerTargetList[3], scoreArray[3]);
+
+//    console.log("scoreArray = " + scoreArray);
+    
+    var highestScore = -8;
+    var winningUser = "";
+
+    for (var x = 0; x < scoreArray.length; x++)
+    {
+        if (scoreArray[x] >= highestScore)
+        {
+            highestScore = scoreArray[x];
+            winningUser = "Player " + (x + 1);
+        }
+    }
+
+    var winMessage = winningUser == "Player 4" ? "Congratulations, you won!" : winningUser + " wins.";
+
+    //console.log("winningUser = " + winningUser + ", winMessage = " + winMessage);
+
+    document.getElementById("winMessage").innerHTML = winMessage;
 }
 
 function enableUserCardDblClick(validCardList) {
@@ -217,11 +269,11 @@ function toggleUserCardDblClick(onOff)
     }
 }
 
-function updateUserScores(playerId, newscore, target)
+function updateUserScores(playerId, tricksWon, target, currentScore)
 {
-    document.getElementById("p" + playerId + "TargetAndScore").innerHTML = "Target: " + target + "<br /> Tricks Won: " + newscore; 
+    document.getElementById("p" + playerId + "TargetAndScore").innerHTML = "Target: " + target + "<br /> Tricks Won: " + tricksWon; 
     document.getElementById("Rnd" + thisRoundId + "p" + playerId + "Tgt").innerHTML = target;
-//    document.getElementById("Rnd" + thisRoundId + "p" + playerId + "Pts").innerHTML = whateverTheScoreIs;
+    document.getElementById("Rnd" + thisRoundId + "p" + playerId + "Pts").innerHTML = currentScore;
 }
 
 
