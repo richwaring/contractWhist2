@@ -127,11 +127,6 @@ C:\Users\richw\source\repos\contractWhist2\contractWhist2\obj\Debug\netcoreapp3.
 C:\Users\richw\source\repos\contractWhist2\contractWhist2\bin\Debug\netcoreapp3.0\System.Data.SqlClient.dll
 C:\Users\richw\source\repos\contractWhist2\contractWhist2\bin\Debug\netcoreapp3.0\runtimes\unix\lib\netcoreapp2.1\System.Data.SqlClient.dll
 C:\Users\richw\source\repos\contractWhist2\contractWhist2\bin\Debug\netcoreapp3.0\runtimes\win\lib\netcoreapp2.1\System.Data.SqlClient.dll
-C:\Users\richw\source\repos\contractWhist2\contractWhist2\obj\Debug\netcoreapp3.0\Razor\Views\cards\Create.cshtml.g.cs
-C:\Users\richw\source\repos\contractWhist2\contractWhist2\obj\Debug\netcoreapp3.0\Razor\Views\cards\Delete.cshtml.g.cs
-C:\Users\richw\source\repos\contractWhist2\contractWhist2\obj\Debug\netcoreapp3.0\Razor\Views\cards\Details.cshtml.g.cs
-C:\Users\richw\source\repos\contractWhist2\contractWhist2\obj\Debug\netcoreapp3.0\Razor\Views\cards\Edit.cshtml.g.cs
-C:\Users\richw\source\repos\contractWhist2\contractWhist2\obj\Debug\netcoreapp3.0\Razor\Views\cards\Index.cshtml.g.cs
 C:\Users\richw\source\repos\contractWhist2\contractWhist2\bin\Debug\netcoreapp3.0\wwwroot\log4net.config
 C:\Users\richw\source\repos\contractWhist2\contractWhist2\bin\Debug\netcoreapp3.0\log4net.dll
 C:\Users\richw\source\repos\contractWhist2\contractWhist2\bin\Debug\netcoreapp3.0\Microsoft.Extensions.Logging.Log4Net.AspNetCore.dll

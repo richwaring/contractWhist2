@@ -4,32 +4,32 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 using System.Data;
+using contractWhist2.Models;
 
 namespace contractWhist2.Data
 {
     public class sqlQueries
     {
-        private static readonly string dbConnectionString = "Server=richtop\\SQLEXPRESS;Database=contractWhist;Trusted_Connection=True;MultipleActiveResultSets=true";
-
+        public static db myDb = new db(); 
+        
         public static void runSql(string sql)
         {
-            var conn = new SqlConnection(dbConnectionString);
-            SqlCommand command = new SqlCommand(sql, conn);
+            //var conn = new SqlConnection(dbConnectionString);
+            SqlCommand command = new SqlCommand(sql, myDb.con);
 
-            conn.Open();
+            myDb.con.Open();
 
             command.ExecuteNonQuery();
 
-            conn.Close();
+            myDb.con.Close();
         }
 
         public static int executeSqlSp(string sp_name, Dictionary<string, string> sp_params, string outputParamName)
 
         {
-            SqlConnection conn = new SqlConnection(dbConnectionString);
-            conn.Open();
+            myDb.con.Open();
 
-            SqlCommand command = new SqlCommand(sp_name, conn);
+            SqlCommand command = new SqlCommand(sp_name, myDb.con);
 
             command.CommandType = System.Data.CommandType.StoredProcedure;
 
@@ -44,19 +44,18 @@ namespace contractWhist2.Data
             Console.WriteLine("Return value: n/a, Out value: {0}", //retval, 
                 outval);
 
-            conn.Close();
+            myDb.con.Close();
 
             return outval;
         }
 
         public static DataTable readSqlSp(string sp_name, Dictionary<string, string> sp_params)
         {
-            var conn = new SqlConnection(dbConnectionString);
-            conn.Open();
+            myDb.con.Open();
 
             DataTable myDataTable = new DataTable();
 
-            SqlCommand command = new SqlCommand(sp_name, conn);
+            SqlCommand command = new SqlCommand(sp_name, myDb.con);
 
             command.CommandType = System.Data.CommandType.StoredProcedure;
 
@@ -66,17 +65,16 @@ namespace contractWhist2.Data
 
             tableFiller.Fill(myDataTable);
 
-            conn.Close();
+            myDb.con.Close();
 
             return myDataTable;
         }
         public static void executeWriteOnlySqlSp(string sp_name, Dictionary<string, string> sp_params)
 
         {
-            SqlConnection conn = new SqlConnection(dbConnectionString);
-            conn.Open();
+            myDb.con.Open();
 
-            SqlCommand command = new SqlCommand(sp_name, conn);
+            SqlCommand command = new SqlCommand(sp_name, myDb.con);
 
             command.CommandType = System.Data.CommandType.StoredProcedure;
 
@@ -84,7 +82,7 @@ namespace contractWhist2.Data
 
             command.ExecuteNonQuery();
 
-            conn.Close();
+            myDb.con.Close();
 
             return ;
         }

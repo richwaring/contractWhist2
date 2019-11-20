@@ -30,9 +30,6 @@ namespace contractWhist2
         {
             services.AddControllersWithViews();
 
-            services.AddDbContext<whistContext>(options =>
-                        options.UseSqlServer(Configuration.GetConnectionString("whistContext")));
-
             services.AddLogging(logging =>
             {
                 logging.AddConsole();
